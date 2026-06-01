@@ -1,33 +1,25 @@
 export class SaveManager {
 
-    static save(state){
+    static save(gameState, achievements = null, quests = null, researches = null){
 
         const data = {
-
-            bread:state.bread,
-            totalBread:state.totalBread,
-
-            clickPower:state.clickPower,
-
-            perSecond:state.perSecond,
-
-            level:state.level,
-
-            exp:state.exp,
-
-            clicks:state.clicks,
-
-            prestigePoints:
-                state.prestigePoints,
-
-            prestigeMultiplier:
-                state.prestigeMultiplier,
-
-            upgrades:
-                state.upgrades,
-
-            lastOnline:
-                Date.now()
+            bread: gameState.bread,
+            totalBread: gameState.totalBread,
+            goldenBread: gameState.goldenBread,
+            totalGoldenBread: gameState.totalGoldenBread,
+            clickPower: gameState.clickPower,
+            perSecond: gameState.perSecond,
+            level: gameState.level,
+            exp: gameState.exp,
+            clicks: gameState.clicks,
+            prestigePoints: gameState.prestigePoints,
+            prestigeMultiplier: gameState.prestigeMultiplier,
+            upgrades: gameState.upgrades,
+            offlineEarned: gameState.offlineEarned,
+            lastOnline: Date.now(),
+            achievements: achievements,
+            quests: quests,
+            researches: researches
         };
 
         localStorage.setItem(
@@ -44,7 +36,7 @@ export class SaveManager {
             );
 
         if(!raw)
-            return;
+            return null;
 
         const data =
             JSON.parse(raw);
@@ -53,5 +45,19 @@ export class SaveManager {
             state,
             data
         );
+
+        return data;
+    }
+
+    static calculateOfflineEarnings(gameState) {
+        const data = JSON.parse(localStorage.getItem("bakery_v5"));
+        if (!data || !data.lastOnline) return 0;
+
+        const now = Date.now();
+        const offlineTime = (now - data.lastOnline) / 1000; // в секундах
+        const pps = data.upgrades.reduce((sum, u) => sum + (u.owned * u.bps), 0);
+        const earnings = Math.floor(pps * offlineTime * data.prestigeMultiplier);
+        
+        return earnings;
     }
 }
